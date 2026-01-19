@@ -1,0 +1,24 @@
+name = "large-file-downloader"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "DRIVE_BUCKET"
+bucket_name = "my-drive-bucket"
+preview_bucket_name = "my-drive-bucket-preview"  # Optional: separate bucket for dev
+
+# Durable Objects configuration
+[durable_objects]
+bindings = [
+  { name = "DOWNLOAD_MANAGER", class_name = "DownloadManager" }
+]
+
+# Durable Objects migration
+[[migrations]]
+tag = "v1"
+new_classes = ["DownloadManager"]
+
+# Optional: Environment variables
+[vars]
+# Add any environment variables here
