@@ -24,6 +24,7 @@ This tool allows you to fetch large files from remote URLs and stream them direc
 
 Create a `wrangler.toml` file in your project root.
 
+
 ```toml
 name = "r2-downloader"
 main = "src/_worker.js"
@@ -51,6 +52,10 @@ new_sqlite_classes = ["DownloadManager"]
 # Add any environment variables here
 ```
 
+### Reference:
+- https://developers.cloudflare.com/durable-objects/reference/durable-objects-migrations/
+
+
 ## 🧪 Local Development
 
 1. **Create `.dev.vars`**
@@ -74,7 +79,7 @@ new_sqlite_classes = ["DownloadManager"]
 
     - Workers
     ```bash
-    npx wrangler secret put APIKEYSECRET
+    npx wrangler secret put APIKEYSECRET  -c ./wrangler.workers.toml
     # Enter your desired password when prompted
     ```
     - Pages
