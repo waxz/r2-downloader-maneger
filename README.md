@@ -25,8 +25,8 @@ This tool allows you to fetch large files from remote URLs and stream them direc
 Create a `wrangler.toml` file in your project root.
 
 ```toml
-name = "large-file-downloader"
-main = "src/index.js"
+name = "r2-downloader"
+main = "src/_worker.js"
 compatibility_date = "2026-01-01"
 
 # R2 bucket binding
@@ -43,8 +43,8 @@ bindings = [
 
 # Durable Objects migration
 [[migrations]]
-tag = "v1"
-new_classes = ["DownloadManager"]
+tag = "<v1>"
+new_sqlite_classes = ["DownloadManager"]
 
 # Optional: Environment variables
 [vars]
@@ -59,7 +59,7 @@ new_classes = ["DownloadManager"]
   ```
 2. **Start Server**
   ```bash
-  npx wrangler dev
+  npx wrangler dev -c ./wrangler.workers.toml
   ```
 
 
@@ -71,14 +71,27 @@ new_classes = ["DownloadManager"]
     ```
 
 2.  **Set the API Key (Recommended):**
+
+    - Workers
     ```bash
     npx wrangler secret put APIKEYSECRET
     # Enter your desired password when prompted
     ```
+    - Pages
+    ```bash
+    npx wrangler pages secret put APIKEYSECRET
+    ```
 
 3.  **Deploy:**
+    - Workers
+    
     ```bash
-    npx wrangler deploy
+    npx wrangler deploy -c ./wrangler.workers.toml
+    ```
+    - Pages
+
+    ```bash
+    npx wrangler pages deploy 
     ```
 
 ## 🖥️ Usage

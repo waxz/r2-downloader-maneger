@@ -1,8 +1,6 @@
 name = "r2-downloader"
+main = "src/_worker.js"
 compatibility_date = "2026-01-01"
-
-pages_build_output_dir="src"
-
 
 # R2 bucket binding
 [[r2_buckets]]
@@ -13,8 +11,13 @@ preview_bucket_name = "my-drive-bucket-preview"  # Optional: separate bucket for
 # Durable Objects configuration
 [durable_objects]
 bindings = [
-  { name = "DOWNLOAD_MANAGER", class_name = "DownloadManager",script_name="r2-downloader" }
+  { name = "DOWNLOAD_MANAGER", class_name = "DownloadManager" }
 ]
+
+# Durable Objects migration
+[[migrations]]
+tag = "<v1>"
+new_sqlite_classes = ["DownloadManager"]
 
 # Optional: Environment variables
 [vars]
