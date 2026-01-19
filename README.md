@@ -1,7 +1,3 @@
-Here is a comprehensive `README.md` for your project.
-
-***
-
 # ☁️ Cloudflare R2 Stream Downloader & Manager
 
 A high-performance, serverless download manager built on **Cloudflare Workers**, **Durable Objects**, and **R2 Storage**.
@@ -55,22 +51,34 @@ new_classes = ["DownloadManager"]
 # Add any environment variables here
 ```
 
+## 🧪 Local Development
+
+1. **Create `.dev.vars`**
+  ```
+  APIKEYSECRET=yourapi
+  ```
+2. **Start Server**
+  ```bash
+  npx wrangler dev
+  ```
+
+
 ## 🚀 Deployment
 
 1.  **Create the R2 Bucket:**
     ```bash
-    wrangler r2 bucket create my-drive-bucket
+    npx wrangler r2 bucket create my-drive-bucket
     ```
 
 2.  **Set the API Key (Recommended):**
     ```bash
-    wrangler secret put APIKEYSECRET
+    npx wrangler secret put APIKEYSECRET
     # Enter your desired password when prompted
     ```
 
 3.  **Deploy:**
     ```bash
-    wrangler deploy
+    npx wrangler deploy
     ```
 
 ## 🖥️ Usage
