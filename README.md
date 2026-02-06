@@ -17,7 +17,6 @@ This tool allows you to fetch large files from remote URLs and stream them direc
 ## 🛠️ Prerequisites
 
 *   A Cloudflare Account.
-*   **Workers Paid Plan** ($5/mo) is required to use **Durable Objects**.
 *   `wrangler` CLI installed (`npm install -g wrangler`).
 
 ## ⚙️ Configuration (`wrangler.toml`)
