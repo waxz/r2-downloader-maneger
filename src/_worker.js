@@ -56,6 +56,14 @@ import {
 } from "./webdav.js";
 import { fetch_mcp } from "./mcp.js";
 
+import { checkRateAndBan, recordAuthResult } from './security.js';
+// Define your parameters globally or pull them from an external configuration file
+const securityOptions = {
+  rateLimit: 100,          // Stricter rate limit
+  maxAuthFails: 10,        // Lower tolerance for bad login attempts
+  banDuration: 60000     // Shorter ban duration (1 minutes in ms)
+};
+
 // ============================================================================
 // VERSION / SYSTEM INFO
 // ============================================================================
@@ -276,9 +284,19 @@ async function fetch_api(request, env) {
     // Constant-time compare: a plain `!==` short-circuits at the first
     // mismatched character, which is a timing side-channel an attacker
     // could use to guess the key one character at a time.
+
+    
+    // 1. Initial Gatekeeping: Rate limits & pre-existing bans
+
+
+
     if (!authKey || !providedKey || !(await timingSafeEqual(providedKey, authKey))) {
+        recordAuthResult(request, false);
+
       return jsonError("Unauthorized", 401);
+
     }
+        recordAuthResult(request, true);
 
     // --- Admin: system settings ---
     if (path === "/api/admin/settings" && method === "GET") {
@@ -531,6 +549,8 @@ export default {
       // trip up structured-clone-based log/IPC pipelines — notably Node's
       // test runner reporter when tests exercise this path directly.
       console.log("Incoming request:", { method, path });
+      const rateCheck = checkRateAndBan(request, securityOptions);
+      if (rateCheck instanceof Response) return rateCheck;
 
       // CORS preflight: browsers send OPTIONS before any cross-origin request.
       // /api and /mcp have no OPTIONS semantics of their own, so we answer

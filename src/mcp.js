@@ -487,7 +487,7 @@ async function toolListFetchCache(env) {
         status: meta.response?.status,
         content_type: meta.response?.content_type,
       });
-    } catch {}
+    } catch { }
   }
   entries.sort((a, b) => a.url.localeCompare(b.url));
   return { count: entries.length, entries };
@@ -608,7 +608,7 @@ async function toolListNotes(env, args) {
         source_url: fm.source_url || null,
         size: obj.size,
       });
-    } catch {}
+    } catch { }
   }
   notes.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   return { count: notes.length, notes };
@@ -671,10 +671,10 @@ async function handleJsonRpcMessage(env, msg) {
       return isNotification
         ? null
         : jsonRpcResult(id, {
-            protocolVersion: PROTOCOL_VERSION,
-            capabilities: { tools: {} },
-            serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
-          });
+          protocolVersion: PROTOCOL_VERSION,
+          capabilities: { tools: {} },
+          serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
+        });
 
     // Client lifecycle notifications: nothing to do, nothing to reply with.
     case "notifications/initialized":
@@ -711,7 +711,12 @@ export async function fetch_mcp(request, env) {
   const providedKey = request.headers.get("x-api-key") || url.searchParams.get("key");
   if (!authKey || !providedKey || !(await timingSafeEqual(providedKey, authKey))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+    recordAuthResult(request, false);
+
   }
+  recordAuthResult(request, true);
+
 
   let body;
   try {
