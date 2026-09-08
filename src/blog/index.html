@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typst Blog</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+        min-height: 100vh;
+      }
+
+      header {
+        background: #1a1a2e;
+        color: #fff;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      header h1 { font-size: 1.1rem; font-weight: 600; flex-shrink: 0; }
+
+      #status {
+        font-size: 0.78rem;
+        padding: 3px 10px;
+        border-radius: 99px;
+        background: #856404;
+        color: #fff3cd;
+        transition: background 0.3s, color 0.3s;
+        white-space: nowrap;
+      }
+      #status.ready  { background: #155724; color: #d4edda; }
+      #status.error  { background: #721c24; color: #f8d7da; }
+
+      .spacer { flex: 1; }
+
+      #settings-btn {
+        background: none; border: 1px solid rgba(255,255,255,0.3);
+        color: #fff; padding: 4px 12px; border-radius: 4px; cursor: pointer;
+        font-size: 0.82rem;
+      }
+      #settings-btn:hover { background: rgba(255,255,255,0.1); }
+
+      /* Settings panel */
+      #settings-panel {
+        background: #fff; border-bottom: 1px solid #ddd;
+        padding: 1rem 1.5rem; display: none; gap: 1rem; flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      #settings-panel.open { display: flex; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field label { font-size: 0.78rem; color: #555; font-weight: 500; }
+      .field input {
+        padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;
+        font-size: 0.9rem; width: 260px;
+      }
+      #save-settings {
+        padding: 6px 18px; background: #007bff; color: #fff;
+        border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;
+        align-self: flex-end;
+      }
+      #save-settings:hover { background: #0056b3; }
+
+      /* Render controls */
+      #controls {
+        padding: 1rem 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;
+        align-items: center; background: #fff;
+        border-bottom: 1px solid #ddd;
+      }
+      #post-path {
+        padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px;
+        font-size: 0.95rem; width: 340px;
+      }
+      #render-btn {
+        padding: 8px 20px; background: #007bff; color: #fff;
+        border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;
+      }
+      #render-btn:disabled { background: #999; cursor: not-allowed; }
+      #render-btn:not(:disabled):hover { background: #0056b3; }
+
+      #setup-hint {
+        font-size: 0.82rem; color: #666;
+        padding: 0 1.5rem 0.75rem;
+        background: #fff;
+        border-bottom: 1px solid #ddd;
+      }
+      #setup-hint a { color: #007bff; }
+      #setup-hint details summary { cursor: pointer; color: #555; }
+      #setup-hint pre {
+        background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;
+        padding: 0.75rem; margin-top: 0.5rem; font-size: 0.8rem;
+        overflow-x: auto; white-space: pre;
+      }
+
+      /* Output area */
+      #content {
+        max-width: 900px; margin: 2rem auto; padding: 0 1.5rem;
+      }
+      #content .placeholder {
+        background: #fff; border-radius: 8px; padding: 3rem;
+        text-align: center; color: #999; border: 2px dashed #ddd;
+      }
+      .typst-doc { width: 100%; height: auto; display: block; }
+      .render-error {
+        background: #fff2f2; border: 1px solid #ffc0c0; border-radius: 6px;
+        padding: 1rem; color: #a00; font-size: 0.9rem; white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Typst Blog</h1>
+      <span id="status">Booting engine…</span>
+      <span class="spacer"></span>
+      <button id="settings-btn">⚙ Settings</button>
+    </header>
+
+    <div id="settings-panel">
+      <div class="field">
+        <label>Worker URL (leave blank for same origin)</label>
+        <input id="cfg-base-url" type="text" placeholder="https://your-worker.workers.dev" />
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input id="cfg-api-key" type="password" placeholder="your-api-key" />
+      </div>
+      <button id="save-settings">Save</button>
+    </div>
+
+    <div id="controls">
+      <input id="post-path" type="text" value="/posts/hello.md"
+             placeholder="/posts/my-post.md or /posts/my-doc.typ" />
+      <button id="render-btn" disabled>Render</button>
+    </div>
+
+    <div id="setup-hint">
+      <details>
+        <summary>Setup: upload <code>renderer.typ</code> to your R2 bucket</summary>
+        <p style="margin-top:0.5rem">The Markdown renderer requires a <code>/renderer.typ</code> file in your bucket.
+           Upload it via the file manager or with:</p>
+        <pre>curl -X PUT "https://your-worker.workers.dev/api/upload?filename=/renderer.typ" \
+  -H "x-api-key: YOUR_KEY" \
+  -H "Content-Type: text/plain" \
+  --data-binary @renderer.typ</pre>
+        <p style="margin-top:0.5rem">Get <code>renderer.typ</code> from the
+           <a href="https://github.com/waxz/r2-downloader-manager" target="_blank" rel="noopener">
+             repository</a>.</p>
+      </details>
+    </div>
+
+    <div id="content">
+      <div class="placeholder">Enter a file path above and click Render.</div>
+    </div>
+
+    <script type="module">
+      import { $typst } from 'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
+      import { configureBackend, lazyRenderTypst } from './typstRenderer.js';
+
+      const CACHE_NAME = 'typst-wasm-v1';
+
+      async function getCachedWasm(url) {
+        const cache = await caches.open(CACHE_NAME);
+        let res = await cache.match(url);
+        if (!res) {
+          console.log('[cache miss]', url);
+          res = await fetch(url);
+          if (res.ok) await cache.put(url, res.clone());
+        }
+        return new Uint8Array(await res.arrayBuffer());
+      }
+
+      // --- Persist settings ---
+      function loadSettings() {
+        try {
+          return JSON.parse(localStorage.getItem('typst-blog-cfg') || '{}');
+        } catch { return {}; }
+      }
+      function saveSettings(cfg) {
+        localStorage.setItem('typst-blog-cfg', JSON.stringify(cfg));
+      }
+
+      const cfg = loadSettings();
+      document.getElementById('cfg-base-url').value = cfg.baseUrl || '';
+      document.getElementById('cfg-api-key').value  = cfg.apiKey  || '';
+
+      function applyConfig() {
+        const baseUrl = document.getElementById('cfg-base-url').value.trim()
+                        || window.location.origin;
+        const apiKey  = document.getElementById('cfg-api-key').value.trim();
+        configureBackend(baseUrl, apiKey);
+      }
+      applyConfig();
+
+      document.getElementById('settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-panel').classList.toggle('open');
+      });
+      document.getElementById('save-settings').addEventListener('click', () => {
+        const cfg = {
+          baseUrl: document.getElementById('cfg-base-url').value.trim(),
+          apiKey:  document.getElementById('cfg-api-key').value.trim(),
+        };
+        saveSettings(cfg);
+        applyConfig();
+        document.getElementById('settings-panel').classList.remove('open');
+      });
+
+      // --- Init Typst engine ---
+      const status  = document.getElementById('status');
+      const renderBtn = document.getElementById('render-btn');
+
+      $typst.setCompilerInitOptions({
+        getModule: () => getCachedWasm(
+          'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm'
+        ),
+        packageRegistry: 'https://packages.typst.org',
+      });
+      $typst.setRendererInitOptions({
+        getModule: () => getCachedWasm(
+          'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm'
+        ),
+      });
+
+      (async () => {
+        try {
+          await $typst.svg({ mainContent: ' ' });
+          status.textContent = 'Engine ready';
+          status.className = 'ready';
+          renderBtn.disabled = false;
+          setTimeout(() => { status.style.opacity = '0'; }, 3000);
+        } catch (e) {
+          status.textContent = 'Engine failed to start';
+          status.className = 'error';
+          console.error(e);
+        }
+      })();
+
+      // --- Render ---
+      renderBtn.addEventListener('click', async () => {
+        const path = document.getElementById('post-path').value.trim();
+        if (!path) return;
+
+        const content = document.getElementById('content');
+        content.innerHTML = '<div class="placeholder">Rendering…</div>';
+        renderBtn.disabled = true;
+
+        try {
+          const svg = await lazyRenderTypst(path);
+          content.innerHTML = svg;
+          content.querySelector('svg')?.classList.add('typst-doc');
+        } catch (err) {
+          content.innerHTML = `<div class="render-error">Error: ${err.message}</div>`;
+        } finally {
+          renderBtn.disabled = false;
+        }
+      });
+
+      // Auto-render if path is in URL hash: /blog/#/posts/hello.md
+      const hashPath = location.hash.slice(1);
+      if (hashPath) {
+        document.getElementById('post-path').value = hashPath;
+        renderBtn.click();
+      }
+    </script>
+  </body>
+</html>

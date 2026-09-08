@@ -572,6 +572,11 @@ export default {
         return env.ASSETS.fetch(request);
       }
 
+      // Typst WASM blog renderer — served as static assets, no auth required.
+      if (path === "/blog" || path === "/blog/" || path.startsWith("/blog/")) {
+        return env.ASSETS.fetch(request);
+      }
+
       //-- Webdav (OPTIONS passes through here so DAV capability headers are preserved)
       if (path.startsWith("/")) return withCors(await fetch_webdav(request, env));
 
